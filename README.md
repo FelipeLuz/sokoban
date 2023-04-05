@@ -3,32 +3,32 @@ Sokoban (倉庫番, Sōko-ban, literalmente "guarda de armazém"[1]) é um jogo 
 
 ## Arquivos
 
-### conmanip.h
+#### conmanip.h
 
 header-only lib baixada em [link](https://github.com/mariusbancila/cppconlib), utilizada para manipular o console.
 
 
-### constants.h
+#### constants.h
 
 Armazena as constantes utilizadas para imprimir os assets.
 
-### gameHelper.h
+#### gameHelper.h
 
 Armazena as funções necessárias para o jogo funcionar, e.g. mover o personagem, mover as caixas, verificar se o jogo esta terminado, etc.
 
-### menu.h
+#### menu.h
 
 Armazena as funções para imprimir os menus do jogo, e.g. menu inicial, menu de pausa, tutorial, sobre, selecionar mapas.
 
-### models.h
+#### models.h
 
 Armazena os modelos utilizados no jogo, e.g. buraco, caixa e personagem.
 
-### print.h
+#### print.h
 
 Armazena as funções auxiliares para imprimir informações no terminal.
 
-### terminal.h
+#### terminal.h
 
 Armazena as funcoes auxiliares de manutênção do terminal
 
