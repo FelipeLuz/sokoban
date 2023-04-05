@@ -3,19 +3,21 @@
     versão: 0.1 (Felski)
 */
 #include <iostream>
-#include<windows.h>
-#include<conio.h>
+#include <windows.h>
+#include <conio.h>
+#include "conmanip.h"
 
+using namespace conmanip;
 using namespace std;
 
 void pauseMenu(COORD &coord);
 void startMenu(COORD &coord);
 
-const char BOX = 'Q';
-const char HOLE = '*';
-const char PLAYER = char (2);
-const char WALL = char(219);
-const char SPACE = ' ';
+string BOX[2] = {"[==]", "[XX]"}; // char(35);
+string HOLE[2] ={" __ ", "(__)"};
+string PLAYER[2] = {" __QQ", "(_)_\">"};
+const string WALL = string(1,char(219));
+const string SPACE = " ";
 
 struct box {
     int x;
@@ -45,11 +47,11 @@ void setFontSize(int a, int b)
     lpConsoleCurrentFontEx->FontWeight = 1000;
 
     SetCurrentConsoleFontEx(hStdOut, 0, lpConsoleCurrentFontEx);
-
 }
 
 void setup(COORD &coord)
 {
+    
 ///ALERTA: NAO MODIFICAR O TRECHO DE CODIGO, A SEGUIR.
     //INICIO: COMANDOS PARA QUE O CURSOR NAO FIQUE PISCANDO NA TELA
     HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -57,7 +59,11 @@ void setup(COORD &coord)
     GetConsoleCursorInfo(out, &cursorInfo);
     cursorInfo.bVisible = false; // set the cursor visibility
     SetConsoleCursorInfo(out, &cursorInfo);
-    setFontSize(60, 60);
+    setFontSize(25, 25);
+
+    console_out_context ctxout;
+    console_out conout(ctxout);
+    conout.settitle("Sokoban - Felipe Luz");
     //FIM: COMANDOS PARA QUE O CURSOR N�O FIQUE PISCANDO NA TELA
     //INICIO: COMANDOS PARA REPOSICIONAR O CURSOR NO IN�CIO DA TELA
     short int CX=0, CY=0;
@@ -79,25 +85,50 @@ char getInput()
     return getch();
 }
 
-void printAt(int x, int y, char val)
+void printCenter(string output)
+{
+    console_out_context ctxout;
+    console_out conout(ctxout);
+    int middle = conout.getsize().X/2;
+    cout << setposx(middle - output.length()/ 2) << output;
+    ctxout.restore(console_cleanup_options::restore_attibutes);
+}
+
+void printAtMultiline(int x, int y, string val[], int lineCount, console_text_colors color )
+{
+    for (int i = 0; i < lineCount; i++)
+    {
+        COORD coord;
+        coord.X = x;
+        coord.Y = y+i;
+        console_out_context ctxout;
+        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+        cout << settextcolor(color) << val[i];
+        ctxout.restore(console_cleanup_options::restore_attibutes);
+    }
+}
+
+void printAt(int x, int y, string val, console_text_colors color)
 {
     COORD coord;
     coord.X = x;
     coord.Y = y;
+    console_out_context ctxout;
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-    cout << val;
+    cout << settextcolor(color) << val;
+    ctxout.restore(console_cleanup_options::restore_attibutes);
 }
 
 void printPlayer(COORD &coord, player player)
 {
-    printAt(player.x, player.y, PLAYER);
+    printAtMultiline(player.x*6, player.y*2, PLAYER, 2,console_text_colors::green);
 }
 
 void printBoxes(COORD &coord, box boxes[], int boxCount)
 {
     for(int i = 0; i < boxCount; i++)
     {
-        printAt(boxes[i].x, boxes[i].y, BOX);
+        printAtMultiline(boxes[i].x*6 + 1, boxes[i].y*2, BOX, 2, (console_text_colors) (i + 2));
     }
 }
 
@@ -105,7 +136,7 @@ void printHoles(COORD &coord, hole holes [], int holeCount)
 {
     for(int i = 0; i < holeCount; i++)
     {
-        printAt(holes[i].x, holes[i].y, HOLE);
+        printAtMultiline(holes[i].x *6 + 1, holes[i].y*2, HOLE, 2, console_text_colors::red);
     }
 }
 
@@ -114,20 +145,22 @@ void printMap(COORD &coord, int map[10][10])
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
     for(int i=0;i<10;i++)
     {
+        string line = "";
         for(int j=0;j<10;j++)
         {
             switch (map[i][j])
             {
                 case 0: 
-                    cout<<SPACE;
+                    line += SPACE + SPACE + SPACE + SPACE + SPACE + SPACE;
                     break;
                 case 1: 
-                    cout<< WALL; 
+                    line +=  WALL + WALL + WALL + WALL +  WALL + WALL ;
                     break;
- 
             }
         }
-        cout<<"\n";     
+
+        cout << line << '\n' << line;
+        cout<<"\n";
     }
 }
 
@@ -160,7 +193,7 @@ bool checkBoxMove(int map[10][10], box boxes[], int boxCount, box box)
     return !map[box.y][box.x];
 }
 
-bool checkInteraction(int map[10][10], player player, box boxes[], int boxCount, int xMove, int yMove)
+bool checkBoxCollision(int map[10][10], player player, box boxes[], int boxCount, int xMove, int yMove)
 {
     for(int i = 0; i < boxCount; i++)
     {
@@ -205,7 +238,7 @@ player move(char input, player lastPos, box boxes[], int boxSize,int map[10][10]
     int xMove = newPos.x - lastPos.x;
     int yMove = newPos.y - lastPos.y;
     
-    bool canMove = checkPlayerMove(map, newPos) && checkInteraction(map, newPos, boxes, boxSize, xMove, yMove);
+    bool canMove = checkPlayerMove(map, newPos) && checkBoxCollision(map, newPos, boxes, boxSize, xMove, yMove);
     return canMove ? newPos : lastPos;
 }
 
@@ -272,18 +305,19 @@ void map0(COORD &coord)
                         1,0,0,0,1,0,0,0,0,0,
                         1,1,1,1,1,0,0,0,0,0,
                         0,0,0,0,0,0,0,0,0,0,};
-    hole holes1[3];
-    holes1[0] = {7, 3};
-    holes1[1] = {7, 4};
-    holes1[2] = {7, 5};
+    hole holes[3];
+    holes[0] = {7, 3};
+    holes[1] = {7, 4};
+    holes[2] = {7, 5};
 
-    box boxes1[3];
-    boxes1[0] = {2, 6};
-    boxes1[1] = {2, 5};
-    boxes1[2] = {3, 6};
+    box boxes[3];
+    boxes[0] = {2, 6};
+    boxes[1] = {2, 5};
+    boxes[2] = {3, 6};
 
     player player = {.x = 1, .y = 7};
-    game(coord, map, player, boxes1, holes1, 3);
+
+    game(coord, map, player, boxes, holes, 3);
 }
 
 void map1(COORD &coord)
@@ -298,20 +332,21 @@ void map1(COORD &coord)
                         1,0,0,0,0,0,0,0,0,1,
                         1,1,1,1,1,1,1,1,1,1,
                         0,0,0,0,0,0,0,0,0,0,};
-    hole holes1[4];
-    holes1[0] = {1, 6};
-    holes1[1] = {1, 7};
-    holes1[2] = {2, 6};
-    holes1[3] = {2, 7};
+    hole holes[4];
+    holes[0] = {1, 6};
+    holes[1] = {1, 7};
+    holes[2] = {2, 6};
+    holes[3] = {2, 7};
 
-    box boxes1[4];
-    boxes1[0] = {2, 4};
-    boxes1[1] = {3, 6};
-    boxes1[2] = {4, 5};
-    boxes1[3] = {4, 2};
+    box boxes[4];
+    boxes[0] = {2, 4};
+    boxes[1] = {3, 6};
+    boxes[2] = {4, 5};
+    boxes[3] = {4, 2};
 
     player player = {.x = 6, .y = 2};
-    game(coord, map, player, boxes1, holes1, 4);
+
+    game(coord, map, player, boxes, holes, 4);
 }
 
 void map2(COORD &coord)
@@ -326,31 +361,40 @@ void map2(COORD &coord)
                         0,1,1,1,1,0,0,0,0,0,
                         0,0,0,0,0,0,0,0,0,0,
                         0,0,0,0,0,0,0,0,0,0,};
-    hole holes1[5];
-    holes1[0] = {1, 1};
-    holes1[1] = {1, 2};
-    holes1[2] = {2, 1};
-    holes1[3] = {3, 1};
-    holes1[4] = {4, 1};
+    hole holes[5];
+    holes[0] = {1, 1};
+    holes[1] = {1, 2};
+    holes[2] = {2, 1};
+    holes[3] = {3, 1};
+    holes[4] = {4, 1};
 
-    box boxes1[5];
-    boxes1[0] = {2, 5};
-    boxes1[1] = {2, 4};
-    boxes1[2] = {3, 3};
-    boxes1[3] = {2, 2};
-    boxes1[4] = {3, 1};
+    box boxes[5];
+    boxes[0] = {2, 5};
+    boxes[1] = {2, 4};
+    boxes[2] = {3, 3};
+    boxes[3] = {2, 2};
+    boxes[4] = {3, 1};
 
     player player = {.x = 1, .y = 5};
-    game(coord, map, player, boxes1, holes1, 5);
+
+    game(coord, map, player, boxes, holes, 5);
 }
 
 void selectMap(COORD &coord)
 {
     clear();
-    printf("(0) Mapa 0\n");
-    printf("(1) Mapa 1\n");
-    printf("(2) Mapa 2\n");
-    printf("(R)etornar\n");
+    printf("\n\n\n");
+    printCenter(" _________________________ \n");
+    printCenter("(__| |_______________| |__)\n");
+    printCenter("   | |    Sokoban    | |   \n");
+    printCenter("   | |_______________| |   \n");
+    printCenter("   | |               | |   \n");
+    printCenter("   | |  (0) Mapa 0   | |   \n");
+    printCenter("   | |  (1) Mapa 1   | |   \n");
+    printCenter("   | |  (2) Mapa 2   | |   \n");
+    printCenter("   | |  (R)etornar   | |   \n");
+    printCenter(" __| |_______________| |__ \n");
+    printCenter("(__|_|_______________|_|__)\n");
 
     char input = getInput();
     
@@ -379,17 +423,25 @@ void selectMap(COORD &coord)
 void pauseMenu(COORD &coord)
 {
     clear();
-    printf("(N)ovo Jogo\n");
-    printf("(C)ontinuar\n");
-    printf("(S)obre\n");
-    printf("(F)im\n");
+    printf("\n\n\n");
+    printCenter(" _________________________ \n");
+    printCenter("(__| |_______________| |__)\n");
+    printCenter("   | |    Sokoban    | |   \n");
+    printCenter("   | |_______________| |   \n");
+    printCenter("   | |               | |   \n");
+    printCenter("   | |  (N)ovo Jogo  | |   \n");
+    printCenter("   | |  (C)ontinuar  | |   \n");
+    printCenter("   | |  (S)obre      | |   \n");
+    printCenter("   | |  (F)im        | |   \n");
+    printCenter(" __| |_______________| |__ \n");
+    printCenter("(__|_|_______________|_|__)\n");
 
     char input = getInput();
     
     if(input == 'f')
         exit(0);
     
-    if(input == 'n') //Todo add map selection
+    if(input == 'n')
         selectMap(coord);
     else if(input == 's')
         about();
@@ -399,12 +451,22 @@ void pauseMenu(COORD &coord)
     pauseMenu(coord);
 }
 
+
+
 void startMenu(COORD &coord)
 {
     clear();
-    printf("(N)ovo Jogo\n");
-    printf("(S)obre\n");
-    printf("(F)im\n");
+    printf("\n\n\n");
+    printCenter(" _________________________ \n");
+    printCenter("(__| |_______________| |__)\n");
+    printCenter("   | |    Sokoban    | |   \n");
+    printCenter("   | |_______________| |   \n");
+    printCenter("   | |               | |   \n");
+    printCenter("   | |  (N)ovo Jogo  | |   \n");
+    printCenter("   | |  (S)obre      | |   \n");
+    printCenter("   | |  (F)im        | |   \n");
+    printCenter(" __| |_______________| |__ \n");
+    printCenter("(__|_|_______________|_|__)\n");
 
     char input = getInput();
     
