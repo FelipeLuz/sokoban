@@ -8,10 +8,14 @@
 
 using namespace std;
 
-const char BOX = 'B';
+void pauseMenu(COORD &coord);
+void startMenu(COORD &coord);
+
+const char BOX = 'Q';
 const char HOLE = '*';
 const char PLAYER = char (2);
 const char WALL = char(219);
+const char SPACE = ' ';
 
 struct box {
     int x;
@@ -53,7 +57,7 @@ void setup(COORD &coord)
     GetConsoleCursorInfo(out, &cursorInfo);
     cursorInfo.bVisible = false; // set the cursor visibility
     SetConsoleCursorInfo(out, &cursorInfo);
-    setFontSize(50, 50);
+    setFontSize(60, 60);
     //FIM: COMANDOS PARA QUE O CURSOR N�O FIQUE PISCANDO NA TELA
     //INICIO: COMANDOS PARA REPOSICIONAR O CURSOR NO IN�CIO DA TELA
     short int CX=0, CY=0;
@@ -115,7 +119,7 @@ void printMap(COORD &coord, int map[10][10])
             switch (map[i][j])
             {
                 case 0: 
-                    cout<<" "; 
+                    cout<<SPACE;
                     break;
                 case 1: 
                     cout<< WALL; 
@@ -215,6 +219,22 @@ void finish()
 
     if(input == 'r')
         return;
+
+    finish();
+}
+
+void about()
+{
+    clear();
+    printf("Felipe Luz - 5975425\n");
+    printf("Abril/2023\n");
+    printf("Abril/2023\n");
+    printf("(V)oltar\n");
+
+    char input = getInput();
+
+    if(input == 'v')
+        return;
 }
 
 void game(COORD &coord, int map[10][10], player player, box boxes[], hole holes[], int boxCount)
@@ -225,8 +245,9 @@ void game(COORD &coord, int map[10][10], player player, box boxes[], hole holes[
     printBoxes(coord, boxes, boxCount);
     
     char input = getInput();
-    if(input == 27) // esc
-        return;
+    
+    if(input == 27) 
+        pauseMenu(coord);
 
     player = move(input, player, boxes, boxCount, map);
 
@@ -239,72 +260,170 @@ void game(COORD &coord, int map[10][10], player player, box boxes[], hole holes[
     game(coord, map, player, boxes, holes, boxCount);
 }
 
-void startGame(COORD &coord)
+void map0(COORD &coord)
 {
-    int map[10][10]={ 1,1,1,1,1,1,1,1,1,1,
-                    1,0,1,0,0,0,0,0,0,1,
-                    1,0,1,0,0,0,0,0,0,1,
-                    1,0,1,1,1,1,0,0,0,1,
-                    1,0,0,0,0,1,0,0,0,1,
-                    1,0,0,1,0,1,0,0,0,1,
-                    1,0,0,0,0,0,0,0,0,1,
-                    1,0,0,0,0,0,0,0,0,1,
-                    1,0,0,0,0,0,0,0,0,1,
-                    1,1,1,1,1,1,1,1,1,1 };
-    int boxCount = 3;
-    box boxes[boxCount];
-    boxes[0] = {7, 8};
-    boxes[1] = {7, 7};
-    boxes[2] = {6, 6};
+    int map[10][10] = { 0,1,1,1,1,1,0,0,0,0,
+                        0,1,0,0,0,1,1,1,1,0,
+                        0,1,0,0,0,1,0,0,1,0,
+                        0,1,1,0,0,0,0,0,1,0,
+                        1,1,1,0,1,1,1,0,1,0,
+                        1,0,0,0,1,0,1,0,1,0,
+                        1,0,0,0,1,0,1,1,1,0,
+                        1,0,0,0,1,0,0,0,0,0,
+                        1,1,1,1,1,0,0,0,0,0,
+                        0,0,0,0,0,0,0,0,0,0,};
+    hole holes1[3];
+    holes1[0] = {7, 3};
+    holes1[1] = {7, 4};
+    holes1[2] = {7, 5};
 
-    hole holes[boxCount];
-    holes[0] = {1, 8};
-    holes[1] = {1, 7};
-    holes[2] = {1, 6};
+    box boxes1[3];
+    boxes1[0] = {2, 6};
+    boxes1[1] = {2, 5};
+    boxes1[2] = {3, 6};
 
-    player player = {.x = 5, .y = 5};
-
-    game(coord, map, player, boxes, holes, boxCount);
-
+    player player = {.x = 1, .y = 7};
+    game(coord, map, player, boxes1, holes1, 3);
 }
 
-void about()
+void map1(COORD &coord)
+{
+    int map[10][10] = { 0,0,1,1,1,1,1,1,1,0,
+                        0,0,1,0,0,0,0,0,1,0,
+                        0,0,1,0,0,0,0,0,1,0,
+                        1,1,1,1,1,0,1,0,1,0,
+                        1,0,0,0,0,0,0,0,1,0,
+                        1,0,0,1,0,1,1,0,1,1,
+                        1,0,0,0,0,0,1,0,0,1,
+                        1,0,0,0,0,0,0,0,0,1,
+                        1,1,1,1,1,1,1,1,1,1,
+                        0,0,0,0,0,0,0,0,0,0,};
+    hole holes1[4];
+    holes1[0] = {1, 6};
+    holes1[1] = {1, 7};
+    holes1[2] = {2, 6};
+    holes1[3] = {2, 7};
+
+    box boxes1[4];
+    boxes1[0] = {2, 4};
+    boxes1[1] = {3, 6};
+    boxes1[2] = {4, 5};
+    boxes1[3] = {4, 2};
+
+    player player = {.x = 6, .y = 2};
+    game(coord, map, player, boxes1, holes1, 4);
+}
+
+void map2(COORD &coord)
+{
+    int map[10][10] = { 1,1,1,1,1,1,0,0,0,0,
+                        1,0,0,0,0,1,0,0,0,0,
+                        1,0,0,0,0,1,0,0,0,0,
+                        1,1,0,0,0,1,0,0,0,0,
+                        1,1,0,0,1,1,0,0,0,0,
+                        1,0,0,0,1,0,0,0,0,0,
+                        1,1,0,0,1,0,0,0,0,0,
+                        0,1,1,1,1,0,0,0,0,0,
+                        0,0,0,0,0,0,0,0,0,0,
+                        0,0,0,0,0,0,0,0,0,0,};
+    hole holes1[5];
+    holes1[0] = {1, 1};
+    holes1[1] = {1, 2};
+    holes1[2] = {2, 1};
+    holes1[3] = {3, 1};
+    holes1[4] = {4, 1};
+
+    box boxes1[5];
+    boxes1[0] = {2, 5};
+    boxes1[1] = {2, 4};
+    boxes1[2] = {3, 3};
+    boxes1[3] = {2, 2};
+    boxes1[4] = {3, 1};
+
+    player player = {.x = 1, .y = 5};
+    game(coord, map, player, boxes1, holes1, 5);
+}
+
+void selectMap(COORD &coord)
 {
     clear();
-    printf("Felipe Luz - 5975425\n");
-    printf("(R)eturn\n");
+    printf("(0) Mapa 0\n");
+    printf("(1) Mapa 1\n");
+    printf("(2) Mapa 2\n");
+    printf("(R)etornar\n");
 
     char input = getInput();
-
+    
     if(input == 'r')
         return;
+
+    if(input == '0') 
+    {    
+        map0(coord);
+        return;
+    }
+    else if(input == '1')
+    {
+        map1(coord);
+        return;
+    }
+    else if(input == '2')
+    {
+        map2(coord);
+        return;
+    }
+
+    selectMap(coord);
 }
 
-void menu(COORD &coord)
+void pauseMenu(COORD &coord)
 {
     clear();
-    printf("(N)ew Game\n");
-    printf("(A)bout\n");
-    printf("(E)xit\n");
+    printf("(N)ovo Jogo\n");
+    printf("(C)ontinuar\n");
+    printf("(S)obre\n");
+    printf("(F)im\n");
 
     char input = getInput();
     
-    if(input == 'e')
-        return;
+    if(input == 'f')
+        exit(0);
     
     if(input == 'n') //Todo add map selection
-        startGame(coord);
-    else if(input == 'a')
+        selectMap(coord);
+    else if(input == 's')
+        about();
+    else if( input == 'c')
+        return;
+
+    pauseMenu(coord);
+}
+
+void startMenu(COORD &coord)
+{
+    clear();
+    printf("(N)ovo Jogo\n");
+    printf("(S)obre\n");
+    printf("(F)im\n");
+
+    char input = getInput();
+    
+    if(input == 'f')
+        return;
+
+    if(input == 'n') //Todo add map selection
+        selectMap(coord);
+    else if(input == 's')
         about();
 
-    menu(coord);
+    startMenu(coord);
 }
 
 int main()
 {
     COORD coord;
     setup(coord);
-    menu(coord);
+    startMenu(coord);
 
     return 0;
 }
