@@ -29,7 +29,8 @@ void printAt(int x, int y, string val, console_text_colors textColor, console_bg
     ctxout.restore(console_cleanup_options::restore_attibutes);
 }
 
-void printAtMultiline(int x, int y, string val[], int lineCount, console_text_colors textColor, console_bg_colors bgColor )
+template<typename T1>
+void printAtMultiline(int x, int y, T1 val[], int lineCount, console_text_colors textColor, console_bg_colors bgColor )
 {
     for (int i = 0; i < lineCount; i++)
     {
@@ -50,7 +51,7 @@ void printBoxes(COORD &coord, box boxes[], int boxCount)
     }
 }
 
-void printHoles(COORD &coord, hole holes [], int holeCount)
+void printHoles(COORD &coord, hole holes[], int holeCount)
 {
     for(int i = 0; i < holeCount; i++)
     {
