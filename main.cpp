@@ -1,10 +1,12 @@
 /**
     Estrutura inicial para um jogo de labirinto
     versão: 0.1 (Felski)
+    versão final: Felipe Luz
 */
 #include <iostream>
 #include <windows.h>
 #include <conio.h>
+#include <unistd.h>
 #include "conmanip.h"
 
 using namespace conmanip;
@@ -13,8 +15,8 @@ using namespace std;
 void pauseMenu(COORD &coord);
 void startMenu(COORD &coord);
 
-string BOX[2] = {"[==]", "[XX]"}; // char(35);
-string HOLE[2] ={" __ ", "(__)"};
+string BOX[2] = {"[####]", "[####]"}; // char(35);
+string HOLE[2] ={"  *  "};
 string PLAYER[2] = {" __QQ", "(_)_\">"};
 const string WALL = string(1,char(219));
 const string SPACE = " ";
@@ -81,7 +83,6 @@ void clear()
 
 char getInput()
 {
-    //if ( _kbhit() )
     return getch();
 }
 
@@ -94,41 +95,35 @@ void printCenter(string output)
     ctxout.restore(console_cleanup_options::restore_attibutes);
 }
 
-void printAtMultiline(int x, int y, string val[], int lineCount, console_text_colors color )
-{
-    for (int i = 0; i < lineCount; i++)
-    {
-        COORD coord;
-        coord.X = x;
-        coord.Y = y+i;
-        console_out_context ctxout;
-        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-        cout << settextcolor(color) << val[i];
-        ctxout.restore(console_cleanup_options::restore_attibutes);
-    }
-}
-
-void printAt(int x, int y, string val, console_text_colors color)
+void printAt(int x, int y, string val, console_text_colors textColor, console_bg_colors bgColor)
 {
     COORD coord;
     coord.X = x;
     coord.Y = y;
     console_out_context ctxout;
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-    cout << settextcolor(color) << val;
+    cout << settextcolor(textColor) << setbgcolor(bgColor) << val;
     ctxout.restore(console_cleanup_options::restore_attibutes);
+}
+
+void printAtMultiline(int x, int y, string val[], int lineCount, console_text_colors textColor, console_bg_colors bgColor )
+{
+    for (int i = 0; i < lineCount; i++)
+    {
+        printAt(x, y + i, val[i], textColor, bgColor);
+    }
 }
 
 void printPlayer(COORD &coord, player player)
 {
-    printAtMultiline(player.x*6, player.y*2, PLAYER, 2,console_text_colors::green);
+    printAtMultiline(player.x*6, player.y*2, PLAYER, 2, console_text_colors::light_yellow, console_bg_colors::black);
 }
 
 void printBoxes(COORD &coord, box boxes[], int boxCount)
 {
     for(int i = 0; i < boxCount; i++)
     {
-        printAtMultiline(boxes[i].x*6 + 1, boxes[i].y*2, BOX, 2, (console_text_colors) (i + 2));
+        printAtMultiline(boxes[i].x*6, boxes[i].y*2, BOX, 2, (console_text_colors) (i + 2), (console_bg_colors) (i + 2));
     }
 }
 
@@ -136,7 +131,7 @@ void printHoles(COORD &coord, hole holes [], int holeCount)
 {
     for(int i = 0; i < holeCount; i++)
     {
-        printAtMultiline(holes[i].x *6 + 1, holes[i].y*2, HOLE, 2, console_text_colors::red);
+        printAtMultiline(holes[i].x *6 + 1, holes[i].y*2, HOLE,1, console_text_colors::red, console_bg_colors::black);
     }
 }
 
@@ -242,27 +237,55 @@ player move(char input, player lastPos, box boxes[], int boxSize,int map[10][10]
     return canMove ? newPos : lastPos;
 }
 
-void finish()
+void finish(COORD &coord)
 {
+    Sleep(2000); //2 s
     clear();
-    printf("You finished the game!\n");
-    printf("(R)eturn\n");
+    printf("\n\n\n");
+    printCenter(" __________________________ \n");
+    printCenter("(__| |________________| |__)\n");
+    printCenter("   | |     Sokoban    | |   \n");
+    printCenter("   | |________________| |   \n");
+    printCenter("   | |                | |   \n");
+    printCenter("   | | Voce completou | |   \n");
+    printCenter("   | |    a fase!     | |   \n");
+    printCenter("   | |                | |   \n");
+    printCenter("   | |   (R)etornar   | |   \n");
+    printCenter(" __| |________________| |__ \n");
+    printCenter("(__|_|________________|_|__)\n");
+    
 
     char input = getInput();
 
     if(input == 'r')
-        return;
+    {
+        startMenu(coord);
+        exit(0);
+    }
 
-    finish();
+    finish(coord);
 }
 
 void about()
 {
     clear();
-    printf("Felipe Luz - 5975425\n");
-    printf("Abril/2023\n");
-    printf("Abril/2023\n");
-    printf("(V)oltar\n");
+    printf("\n\n\n");
+    printCenter(" _________________________ \n");
+    printCenter("(__| |_______________| |__)\n");
+    printCenter("   | |    Sokoban    | |   \n");
+    printCenter("   | |_______________| |   \n");
+    printCenter("   | |               | |   \n");
+    printCenter("   | |  Felipe Luz   | |   \n");
+    printCenter("   | |               | |   \n");
+    printCenter("   | | Alg. Prog. II | |   \n");
+    printCenter("   | |  Abril/2023   | |   \n");
+    printCenter("   | |               | |   \n");
+    printCenter("   | |   Professor:  | |   \n");
+    printCenter("   | |  Thiago F. P. | |   \n");
+    printCenter("   | |               | |   \n");
+    printCenter("   | |  (R)etornar   | |   \n");
+    printCenter(" __| |_______________| |__ \n");
+    printCenter("(__|_|_______________|_|__)\n");
 
     char input = getInput();
 
@@ -277,18 +300,18 @@ void game(COORD &coord, int map[10][10], player player, box boxes[], hole holes[
     printPlayer(coord, player);
     printBoxes(coord, boxes, boxCount);
     
+    if(checkComplete(boxes, holes, boxCount))
+    {
+        finish(coord);
+        return;
+    }
+
     char input = getInput();
     
     if(input == 27) 
         pauseMenu(coord);
 
     player = move(input, player, boxes, boxCount, map);
-
-    if(checkComplete(boxes, holes, boxCount))
-    {
-        finish();
-        return;
-    }
 
     game(coord, map, player, boxes, holes, boxCount);
 }
@@ -306,17 +329,17 @@ void map0(COORD &coord)
                         1,1,1,1,1,0,0,0,0,0,
                         0,0,0,0,0,0,0,0,0,0,};
     hole holes[3];
-    holes[0] = {7, 3};
-    holes[1] = {7, 4};
-    holes[2] = {7, 5};
+    holes[0] = {.x = 7, .y = 3};
+    holes[1] = {.x = 7, .y = 4};
+    holes[2] = {.x = 7, .y = 5};
 
     box boxes[3];
-    boxes[0] = {2, 6};
-    boxes[1] = {2, 5};
-    boxes[2] = {3, 6};
+    boxes[0] = {.x = 2, .y = 6};
+    boxes[1] = {.x = 2, .y = 5};
+    boxes[2] = {.x = 3, .y = 6};
 
     player player = {.x = 1, .y = 7};
-
+    clear();
     game(coord, map, player, boxes, holes, 3);
 }
 
@@ -333,19 +356,19 @@ void map1(COORD &coord)
                         1,1,1,1,1,1,1,1,1,1,
                         0,0,0,0,0,0,0,0,0,0,};
     hole holes[4];
-    holes[0] = {1, 6};
-    holes[1] = {1, 7};
-    holes[2] = {2, 6};
-    holes[3] = {2, 7};
+    holes[0] = {.x = 1, .y = 6};
+    holes[1] = {.x = 1, .y = 7};
+    holes[2] = {.x = 2, .y = 6};
+    holes[3] = {.x = 2, .y = 7};
 
     box boxes[4];
-    boxes[0] = {2, 4};
-    boxes[1] = {3, 6};
-    boxes[2] = {4, 5};
-    boxes[3] = {4, 2};
+    boxes[0] = {.x = 2, .y = 4};
+    boxes[1] = {.x = 3, .y = 6};
+    boxes[2] = {.x = 4, .y = 5};
+    boxes[3] = {.x = 4, .y = 2};
 
     player player = {.x = 6, .y = 2};
-
+    clear();
     game(coord, map, player, boxes, holes, 4);
 }
 
@@ -362,21 +385,21 @@ void map2(COORD &coord)
                         0,0,0,0,0,0,0,0,0,0,
                         0,0,0,0,0,0,0,0,0,0,};
     hole holes[5];
-    holes[0] = {1, 1};
-    holes[1] = {1, 2};
-    holes[2] = {2, 1};
-    holes[3] = {3, 1};
-    holes[4] = {4, 1};
+    holes[0] = {.x = 1, .y = 1};
+    holes[1] = {.x = 1, .y = 2};
+    holes[2] = {.x = 2, .y = 1};
+    holes[3] = {.x = 3, .y = 1};
+    holes[4] = {.x = 4, .y = 1};
 
     box boxes[5];
-    boxes[0] = {2, 5};
-    boxes[1] = {2, 4};
-    boxes[2] = {3, 3};
-    boxes[3] = {2, 2};
-    boxes[4] = {3, 1};
+    boxes[0] = {.x = 2, .y = 5};
+    boxes[1] = {.x = 2, .y = 4};
+    boxes[2] = {.x = 3, .y = 3};
+    boxes[3] = {.x = 2, .y = 2};
+    boxes[4] = {.x = 3, .y = 1};
 
     player player = {.x = 1, .y = 5};
-
+    clear();
     game(coord, map, player, boxes, holes, 5);
 }
 
@@ -473,7 +496,7 @@ void startMenu(COORD &coord)
     if(input == 'f')
         return;
 
-    if(input == 'n') //Todo add map selection
+    if(input == 'n')
         selectMap(coord);
     else if(input == 's')
         about();
