@@ -223,9 +223,6 @@ void selectMap(COORD &coord, string playerName)
     char input = getInput();
     string map = "map";
 
-    if(input == 'r' || input == 27)
-        return;
-
     switch (input)
     {
         case 'r':
