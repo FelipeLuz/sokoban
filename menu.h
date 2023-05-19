@@ -40,8 +40,9 @@ void tutorial()
 	tutorial();
 }
 
-void printFinishMenu()
+void printFinishMenu(int moveCount)
 {
+    string moves = to_string(moveCount);
     clear();
     printf("\n\n\n");
     printCenter(" __________________________ \n");
@@ -50,7 +51,9 @@ void printFinishMenu()
     printCenter("   | |________________| |   \n");
     printCenter("   | |                | |   \n");
     printCenter("   | | Voce completou | |   \n");
-    printCenter("   | |    a fase!     | |   \n");
+    printCenter("   | |    a fase em   | |   \n");
+    printCenter("   | |      "+moves+"        | |   \n");
+    printCenter("   | |   movimentos   | |   \n");
     printCenter("   | |                | |   \n");
     printCenter("   | |   (R)etornar   | |   \n");
     printCenter(" __| |________________| |__ \n");

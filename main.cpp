@@ -9,13 +9,19 @@
 #include <unistd.h>
 #include "conmanip.h"
 #include "gameHelper.h"
+#include<fstream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <sstream>
 
 using namespace conmanip;
 using namespace std;
+typedef pair<string, int> PlayerScore;
 
-void finishMenu(COORD &coord);
-void pauseMenu(COORD &coord);
-void startMenu(COORD &coord);
+void finishMenu(COORD &coord, int moveCount, string playerName);
+void pauseMenu(COORD &coord, string playerName);
+void startMenu(COORD &coord, string playerName);
 
 void setFontSize(int a, int b) 
 {
@@ -34,8 +40,7 @@ void setFontSize(int a, int b)
 
 void setup(COORD &coord)
 {
-    
-///ALERTA: NAO MODIFICAR O TRECHO DE CODIGO, A SEGUIR.
+    ///ALERTA: NAO MODIFICAR O TRECHO DE CODIGO, A SEGUIR.
     //INICIO: COMANDOS PARA QUE O CURSOR NAO FIQUE PISCANDO NA TELA
     HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO     cursorInfo;
@@ -54,164 +59,236 @@ void setup(COORD &coord)
     coord.X = CX;
     coord.Y = CY;
     //FIM: COMANDOS PARA REPOSICIONAR O CURSOR NO IN�CIO DA TELA
-///ALERTA: NAO MODIFICAR O TRECHO DE CODIGO, ACIMA.
+    ///ALERTA: NAO MODIFICAR O TRECHO DE CODIGO, ACIMA.
 }
 
-void game(COORD &coord, int map[10][10], player player, box boxes[], hole holes[], int boxCount)
+bool sortScores(const PlayerScore &a, const PlayerScore &b) 
 {
-    printMap(coord, map);
-    printHoles(coord, holes, boxCount);
-    printPlayer(coord, player);
-    printBoxes(coord, boxes, boxCount);
-    
-    if(checkComplete(boxes, holes, boxCount))
+    return (a.second < b.second);
+}
+
+void saveScore(string mapName, string playerName, int moveCount) 
+{
+    vector<PlayerScore> scores;
+    string path =  SCORES_FOLDER + mapName + SCORES_EXTENSION;
+    ifstream file(path);
+    string line, name;
+    int moves;
+
+    if (file.is_open())
     {
-        finishMenu(coord);
+        while (getline(file, line)) 
+        {
+            stringstream ss(line);
+            getline(ss, name, ',');
+            ss >> moves;
+
+            scores.push_back(make_pair(name, moves));
+        }
+    }
+    file.close();
+    
+    scores.push_back(make_pair(playerName, moveCount));
+    sort(scores.begin(), scores.end(), sortScores);
+   
+    ofstream outputFile(path);
+    if (outputFile.is_open())
+    {
+        for (const auto& score : scores) 
+        {
+            outputFile << score.first << "," << score.second << "\n";
+        }
+    }
+
+    outputFile.close();
+}
+
+
+
+void gameV2(COORD &coord, assets assets, history history)
+{
+    //history.assets[assets.moveCount] = assets;
+    printMap(coord, assets.map);
+    printHoles(coord, assets.holes, assets.boxCount);
+    printPlayer(coord, assets.player);
+    printBoxes(coord, assets.boxes, assets.boxCount);
+    
+    if(checkComplete(assets.boxes, assets.holes, assets.boxCount))
+    {
+        saveScore(assets.mapName, assets.playerName, assets.moveCount);
+        finishMenu(coord, assets.moveCount, assets.playerName);
         return;
     }
 
     char input = getInput();
     
     if(input == 27) 
-        pauseMenu(coord);
+        pauseMenu(coord, assets.playerName);
 
-    player = move(input, player, boxes, boxCount, map);
-
-    game(coord, map, player, boxes, holes, boxCount);
+    assets.player = move(input, assets.player, assets.boxes, assets.boxCount, assets.map, assets.moveCount);
+    
+    gameV2(coord, assets, history);
 }
 
-void map0(COORD &coord)
+player readMapFile( int map[10][10], player player, box boxes[], hole holes[], string mapName, int &boxCount )
 {
-    int map[10][10] = { 0,1,1,1,1,1,0,0,0,0,
-                        0,1,0,0,0,1,1,1,1,0,
-                        0,1,0,0,0,1,0,0,1,0,
-                        0,1,1,0,0,0,0,0,1,0,
-                        1,1,1,0,1,1,1,0,1,0,
-                        1,0,0,0,1,0,1,0,1,0,
-                        1,0,0,0,1,0,1,1,1,0,
-                        1,0,0,0,1,0,0,0,0,0,
-                        1,1,1,1,1,0,0,0,0,0,
-                        0,0,0,0,0,0,0,0,0,0,};
-    hole holes[3];
-    holes[0] = {.x = 7, .y = 3};
-    holes[1] = {.x = 7, .y = 4};
-    holes[2] = {.x = 7, .y = 5};
+    ifstream stream;
+    string mapPath = MAPS_FOLDER + mapName + MAP_EXTENSION;
+    int currBox = 0;
+    int currHole = 0;
 
-    box boxes[3];
-    boxes[0] = {.x = 2, .y = 6};
-    boxes[1] = {.x = 2, .y = 5};
-    boxes[2] = {.x = 3, .y = 6};
+    stream.open(mapPath);
 
-    player player = {.x = 1, .y = 7};
+    if (stream.is_open()){
+        stream>>player.x;
+        stream>>player.y;
+        for(int i=0; i<10; i++){
+            for(int j=0; j<10; j++){
+                int cell;
+                stream >> cell;
+
+                if(cell == 2)
+                {
+                    //boxes[currBox] = {.x = j, .y = i};
+                    currBox++;
+                }
+                else if(cell == 3)
+                {
+                    //holes[currHole] = {.x = j, .y = i};
+                    currHole++;
+                }
+                else if(cell == 4)
+                {
+                    //holes[currHole] = {.x = j, .y = i};
+                    //boxes[currBox] = {.x = j, .y = i};
+                    currBox++;
+                    currHole++;
+                }
+
+                if(cell == 1)
+                {
+                    map[i][j] = cell;
+                }
+                else
+                {
+                    map[i][j] = 0;
+                }
+            }
+        }
+    }
+    stream.close();
+
+    boxCount = currBox;
+    return player;
+}
+
+assets readMapFileV2( assets pAssets, string mapName )
+{
+    ifstream stream;
+    string mapPath = MAPS_FOLDER + mapName + MAP_EXTENSION;
+    int currBox = 0;
+    int currHole = 0;
+    stream.open(mapPath);
+
+    if (stream.is_open()){
+        stream>>pAssets.player.x;
+        stream>>pAssets.player.y;
+        for(int i=0; i<10; i++){
+            for(int j=0; j<10; j++){
+                int cell;
+                stream >> cell;
+
+                if(cell == 2)
+                {
+                    pAssets.boxes[currBox] = {.x = j, .y = i};
+                    currBox++;
+                }
+                else if(cell == 3)
+                {
+                    pAssets.holes[currHole] = {.x = j, .y = i};
+                    currHole++;
+                }
+                else if(cell == 4)
+                {
+                    pAssets.holes[currHole] = {.x = j, .y = i};
+                    pAssets.boxes[currBox] = {.x = j, .y = i};
+                    currBox++;
+                    currHole++;
+                }
+
+                if(cell == 1)
+                {
+                    pAssets.map[i][j] = cell;
+                }
+                else
+                {
+                    pAssets.map[i][j] = 0;
+                }
+            }
+        }
+    }
+    stream.close();
+    pAssets.boxCount = currBox;
+    return pAssets;
+}
+
+void loadMap(COORD &coord, string mapName, string playerName)
+{
+    assets assets;
+    history history;
+    assets.init();
+    assets.mapName = mapName;
+    assets.playerName = playerName;
+
+    assets = readMapFileV2(assets, mapName);
     clear();
-    game(coord, map, player, boxes, holes, 3);
+    gameV2(coord, assets, history);
 }
 
-void map1(COORD &coord)
+void finishMenu(COORD &coord, int moveCount, string playerName)
 {
-    int map[10][10] = { 0,0,1,1,1,1,1,1,1,0,
-                        0,0,1,0,0,0,0,0,1,0,
-                        0,0,1,0,0,0,0,0,1,0,
-                        1,1,1,1,1,0,1,0,1,0,
-                        1,0,0,0,0,0,0,0,1,0,
-                        1,0,0,1,0,1,1,0,1,1,
-                        1,0,0,0,0,0,1,0,0,1,
-                        1,0,0,0,0,0,0,0,0,1,
-                        1,1,1,1,1,1,1,1,1,1,
-                        0,0,0,0,0,0,0,0,0,0,};
-    hole holes[4];
-    holes[0] = {.x = 1, .y = 6};
-    holes[1] = {.x = 1, .y = 7};
-    holes[2] = {.x = 2, .y = 6};
-    holes[3] = {.x = 2, .y = 7};
-
-    box boxes[4];
-    boxes[0] = {.x = 2, .y = 4};
-    boxes[1] = {.x = 3, .y = 6};
-    boxes[2] = {.x = 4, .y = 5};
-    boxes[3] = {.x = 4, .y = 2};
-
-    player player = {.x = 6, .y = 2};
-    clear();
-    game(coord, map, player, boxes, holes, 4);
-}
-
-void map2(COORD &coord)
-{
-    int map[10][10] = { 1,1,1,1,1,1,0,0,0,0,
-                        1,0,0,0,0,1,0,0,0,0,
-                        1,0,0,0,0,1,0,0,0,0,
-                        1,1,0,0,0,1,0,0,0,0,
-                        1,1,0,0,1,1,0,0,0,0,
-                        1,0,0,0,1,0,0,0,0,0,
-                        1,1,0,0,1,0,0,0,0,0,
-                        0,1,1,1,1,0,0,0,0,0,
-                        0,0,0,0,0,0,0,0,0,0,
-                        0,0,0,0,0,0,0,0,0,0,};
-    hole holes[5];
-    holes[0] = {.x = 1, .y = 1};
-    holes[1] = {.x = 1, .y = 2};
-    holes[2] = {.x = 2, .y = 1};
-    holes[3] = {.x = 3, .y = 1};
-    holes[4] = {.x = 4, .y = 1};
-
-    box boxes[5];
-    boxes[0] = {.x = 2, .y = 5};
-    boxes[1] = {.x = 2, .y = 4};
-    boxes[2] = {.x = 3, .y = 3};
-    boxes[3] = {.x = 2, .y = 2};
-    boxes[4] = {.x = 3, .y = 1};
-
-    player player = {.x = 1, .y = 5};
-    clear();
-    game(coord, map, player, boxes, holes, 5);
-}
-
-void finishMenu(COORD &coord)
-{
-    Sleep(2000); //2 s
-    printFinishMenu();
+    Sleep(2000); //2 sec
+    printFinishMenu(moveCount);
 
     char input = getInput();
 
     if(input == 'r' || input == 27)
     {
-        startMenu(coord);
+        startMenu(coord, playerName);
         exit(0);
     }
 
-    finishMenu(coord);
+    finishMenu(coord, moveCount, playerName);
 }
 
-void selectMap(COORD &coord)
+void selectMap(COORD &coord, string playerName)
 {
     printSelectMapMenu();
 
     char input = getInput();
-    
+    string map = "map";
+
     if(input == 'r' || input == 27)
         return;
 
-    if(input == '0') 
-    {    
-        map0(coord);
-        return;
-    }
-    else if(input == '1')
+    switch (input)
     {
-        map1(coord);
-        return;
-    }
-    else if(input == '2')
-    {
-        map2(coord);
-        return;
-    }
+        case 'r':
+        case 27:
+            return;
 
-    selectMap(coord);
+        case '0':
+        case '1':
+        case '2':
+            loadMap(coord, map.append(1, input), playerName);
+            break;
+    
+    default:
+        selectMap(coord, playerName);
+    }
 }
 
-void pauseMenu(COORD &coord)
+void pauseMenu(COORD &coord, string playerName)
 {
     printPauseMenu();
 
@@ -221,16 +298,16 @@ void pauseMenu(COORD &coord)
         exit(0);
     
     if(input == 'n')
-        selectMap(coord);
+        selectMap(coord, playerName);
     else if(input == 's')
         about();
     else if( input == 'c')
         return;
 
-    pauseMenu(coord);
+    pauseMenu(coord, playerName);
 }
 
-void startMenu(COORD &coord)
+void startMenu(COORD &coord, string playerName)
 {
     printStartMenu();
 
@@ -240,18 +317,22 @@ void startMenu(COORD &coord)
         return;
 
     if(input == 'n')
-        selectMap(coord);
+        selectMap(coord, playerName);
     else if(input == 's')
         about();
 
-    startMenu(coord);
+    startMenu(coord, playerName);
 }
 
 int main()
 {
+    string playerName;
+    cout << "Entre seu nome: ";
+    cin >> playerName;
+
     COORD coord;
     setup(coord);
-    startMenu(coord);
+    startMenu(coord, playerName);
 
     return 0;
 }

@@ -1,4 +1,5 @@
 #include "menu.h"
+#include<fstream>
 
 bool checkComplete(box boxes[], hole holes[], int boxCount)
 {
@@ -53,7 +54,19 @@ bool checkPlayerMove(int map[10][10], player player)
     return !map[player.y][player.x];
 }
 
-player move(char input, player lastPos, box boxes[], int boxSize,int map[10][10])
+void saveMove(char move) 
+{
+    ofstream file("moves.csv", ios_base::app);
+
+    if (file.is_open())
+    {
+        file << move << ',';
+    }
+
+    file.close();
+}
+
+player move(char input, player lastPos, box boxes[], int boxSize,int map[10][10], int &moveCount)
 {
     player newPos = lastPos;
     switch(input)
@@ -75,5 +88,13 @@ player move(char input, player lastPos, box boxes[], int boxSize,int map[10][10]
     int yMove = newPos.y - lastPos.y;
     
     bool canMove = checkPlayerMove(map, newPos) && checkBoxCollision(map, newPos, boxes, boxSize, xMove, yMove);
-    return canMove ? newPos : lastPos;
+    
+    if(canMove)
+    {
+        moveCount++;
+        saveMove(input);
+        return newPos;
+    }
+
+    return lastPos;
 }

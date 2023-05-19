@@ -82,3 +82,27 @@ void printMap(COORD &coord, int map[10][10])
         cout<<"\n";
     }
 }
+
+void printScoreBoard(COORD &coord, int map[10][10])
+{
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+    for(int i=0;i<10;i++)
+    {
+        string line = "";
+        for(int j=0;j<10;j++)
+        {
+            switch (map[i][j])
+            {
+                case 0: 
+                    line += SPACE + SPACE + SPACE + SPACE + SPACE + SPACE;
+                    break;
+                case 1: 
+                    line +=  WALL + WALL + WALL + WALL +  WALL + WALL ;
+                    break;
+            }
+        }
+
+        cout << line << '\n' << line;
+        cout<<"\n";
+    }
+}
