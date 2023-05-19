@@ -83,6 +83,9 @@ assets move(char input, assets assets, history &history)
         case 77: case 'd': ///direita
             newPos.x++;
         break;
+
+        default: 
+            return assets;
     }
 
     int xMove = newPos.x - assets.player.x;
