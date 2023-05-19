@@ -134,58 +134,6 @@ void gameV2(COORD &coord, assets assets, history history)
     gameV2(coord, assets, history);
 }
 
-player readMapFile( int map[10][10], player player, box boxes[], hole holes[], string mapName, int &boxCount )
-{
-    ifstream stream;
-    string mapPath = MAPS_FOLDER + mapName + MAP_EXTENSION;
-    int currBox = 0;
-    int currHole = 0;
-
-    stream.open(mapPath);
-
-    if (stream.is_open()){
-        stream>>player.x;
-        stream>>player.y;
-        for(int i=0; i<10; i++){
-            for(int j=0; j<10; j++){
-                int cell;
-                stream >> cell;
-
-                if(cell == 2)
-                {
-                    //boxes[currBox] = {.x = j, .y = i};
-                    currBox++;
-                }
-                else if(cell == 3)
-                {
-                    //holes[currHole] = {.x = j, .y = i};
-                    currHole++;
-                }
-                else if(cell == 4)
-                {
-                    //holes[currHole] = {.x = j, .y = i};
-                    //boxes[currBox] = {.x = j, .y = i};
-                    currBox++;
-                    currHole++;
-                }
-
-                if(cell == 1)
-                {
-                    map[i][j] = cell;
-                }
-                else
-                {
-                    map[i][j] = 0;
-                }
-            }
-        }
-    }
-    stream.close();
-
-    boxCount = currBox;
-    return player;
-}
-
 assets readMapFileV2( assets pAssets, string mapName )
 {
     ifstream stream;
@@ -269,6 +217,7 @@ void finishMenu(COORD &coord, int moveCount, string playerName)
 
 void selectMap(COORD &coord, string playerName)
 {
+    clearMoves();
     printSelectMapMenu();
 
     char input = getInput();
