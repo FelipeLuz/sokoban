@@ -20,7 +20,7 @@ using namespace std;
 typedef pair<string, int> PlayerScore;
 
 void finishMenu(COORD &coord, int moveCount, string playerName);
-void pauseMenu(COORD &coord, string playerName);
+void pauseMenu(COORD &coord, string playerName, history oldHistory);
 void startMenu(COORD &coord, string playerName);
 
 void setFontSize(int a, int b) 
@@ -103,11 +103,15 @@ void saveScore(string mapName, string playerName, int moveCount)
     outputFile.close();
 }
 
+void clearMoves() {
 
+    ofstream file("moves.csv");
+
+    file.close();
+}
 
 void gameV2(COORD &coord, assets assets, history history)
 {
-    //history.assets[assets.moveCount] = assets;
     printMap(coord, assets.map);
     printHoles(coord, assets.holes, assets.boxCount);
     printPlayer(coord, assets.player);
@@ -123,9 +127,9 @@ void gameV2(COORD &coord, assets assets, history history)
     char input = getInput();
     
     if(input == 27) 
-        pauseMenu(coord, assets.playerName);
+        pauseMenu(coord, assets.playerName, history);
 
-    assets.player = move(input, assets.player, assets.boxes, assets.boxCount, assets.map, assets.moveCount);
+    assets = move(input, assets, history);
     
     gameV2(coord, assets, history);
 }
@@ -288,7 +292,7 @@ void selectMap(COORD &coord, string playerName)
     }
 }
 
-void pauseMenu(COORD &coord, string playerName)
+void pauseMenu(COORD &coord, string playerName, history oldHistory)
 {
     printPauseMenu();
 
@@ -301,10 +305,28 @@ void pauseMenu(COORD &coord, string playerName)
         selectMap(coord, playerName);
     else if(input == 's')
         about();
+    else if( input == 'v')
+    {
+        clear();
+        int step = 0;
+        cout << "Voce deu " << oldHistory.assets.back().moveCount << " passos, quantos movimentos quer voltar? " << endl;
+        cin >> step;
+
+        if( step >= oldHistory.assets.size())
+        {
+            history newHistory;
+            return gameV2(coord, oldHistory.assets[0], newHistory);
+        }
+
+        for (int i = 0; i < step; i++)
+            oldHistory.assets.pop_back();
+
+        return gameV2(coord, oldHistory.assets.back(), oldHistory);
+    }
     else if( input == 'c')
         return;
 
-    pauseMenu(coord, playerName);
+    pauseMenu(coord, playerName, oldHistory);
 }
 
 void startMenu(COORD &coord, string playerName)
@@ -326,6 +348,7 @@ void startMenu(COORD &coord, string playerName)
 
 int main()
 {
+    clearMoves();
     string playerName;
     cout << "Entre seu nome: ";
     cin >> playerName;

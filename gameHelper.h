@@ -66,9 +66,9 @@ void saveMove(char move)
     file.close();
 }
 
-player move(char input, player lastPos, box boxes[], int boxSize,int map[10][10], int &moveCount)
+assets move(char input, assets assets, history &history)
 {
-    player newPos = lastPos;
+    player newPos = assets.player;
     switch(input)
     {
         case 72: case 'w': ///cima
@@ -84,17 +84,19 @@ player move(char input, player lastPos, box boxes[], int boxSize,int map[10][10]
             newPos.x++;
         break;
     }
-    int xMove = newPos.x - lastPos.x;
-    int yMove = newPos.y - lastPos.y;
+
+    int xMove = newPos.x - assets.player.x;
+    int yMove = newPos.y - assets.player.y;
     
-    bool canMove = checkPlayerMove(map, newPos) && checkBoxCollision(map, newPos, boxes, boxSize, xMove, yMove);
+    bool canMove = checkPlayerMove(assets.map, newPos) && checkBoxCollision(assets.map, newPos, assets.boxes, assets.boxCount, xMove, yMove);
     
     if(canMove)
     {
-        moveCount++;
+        assets.moveCount++;
+        history.assets.push_back(assets);
         saveMove(input);
-        return newPos;
+        assets.player = newPos;
     }
 
-    return lastPos;
+    return assets;
 }

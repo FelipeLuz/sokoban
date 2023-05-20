@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <iostream>
+#include <vector>
 using namespace std;
 
 
@@ -50,5 +51,5 @@ struct assets
 
 struct history
 {
-    assets assets[10];
+    vector<assets> assets;
 };

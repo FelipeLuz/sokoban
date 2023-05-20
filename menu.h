@@ -118,17 +118,18 @@ void printPauseMenu()
     clear();
     printf("\n\n\n");
     printCenter(" _________________________ \n");
-    printCenter("(__| |_______________| |__)\n");
-    printCenter("   | |    Sokoban    | |   \n");
-    printCenter("   | |_______________| |   \n");
-    printCenter("   | |               | |   \n");
-    printCenter("   | |  (N)ovo Jogo  | |   \n");
-    printCenter("   | |  (C)ontinuar  | |   \n");
-    printCenter("   | |  (S)obre      | |   \n");
-	printCenter("   | |               | |   \n");
-    printCenter("   | |  (F)im        | |   \n");
-    printCenter(" __| |_______________| |__ \n");
-    printCenter("(__|_|_______________|_|__)\n");
+    printCenter("(__| |_________________| |__)\n");
+    printCenter("   | |    Sokoban      | |   \n");
+    printCenter("   | |_________________| |   \n");
+    printCenter("   | |                 | |   \n");
+    printCenter("   | |  (N)ovo Jogo    | |   \n");
+    printCenter("   | |  (C)ontinuar    | |   \n");
+    printCenter("   | |  (V)oltar passos| |   \n");
+    printCenter("   | |  (S)obre        | |   \n");
+	printCenter("   | |                 | |   \n");
+    printCenter("   | |  (F)im          | |   \n");
+    printCenter(" __| |_________________| |__ \n");
+    printCenter("(__|_|_________________|_|__)\n");
 }
 
 void printStartMenu()
