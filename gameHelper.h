@@ -93,9 +93,9 @@ assets move(char input, assets assets, history &history)
     if(canMove)
     {
         assets.moveCount++;
+        assets.player = newPos;
         history.assets.push_back(assets);
         saveMove(input);
-        assets.player = newPos;
     }
 
     return assets;

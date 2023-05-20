@@ -241,10 +241,12 @@ void loadMap(COORD &coord, string mapName, string playerName)
     assets assets;
     history history;
     assets.init();
+    assets.moveCount = 0;
     assets.mapName = mapName;
     assets.playerName = playerName;
 
     assets = readMapFileV2(assets, mapName);
+    history.assets.push_back(assets);
     clear();
     gameV2(coord, assets, history);
 }
@@ -312,9 +314,10 @@ void pauseMenu(COORD &coord, string playerName, history oldHistory)
         cout << "Voce deu " << oldHistory.assets.back().moveCount << " passos, quantos movimentos quer voltar? " << endl;
         cin >> step;
 
-        if( step >= oldHistory.assets.size())
+        if( step >= oldHistory.assets.back().moveCount)
         {
             history newHistory;
+            newHistory.assets.push_back(oldHistory.assets[0]);
             return gameV2(coord, oldHistory.assets[0], newHistory);
         }
 
